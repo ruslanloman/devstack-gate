@@ -18,20 +18,16 @@
 #
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-set -o errexit
-
-echo $PPID > $WORKSPACE/gate.pid
+#put to job export 
+#DEVSTACK_GATE_TEMPEST=1 //tempest
+#DEVSTACK_GATE_NEUTRON=1 // Neutron
+#DEVSTACK_GATE_GRENADE=0
+#LOCALRC_BRANCH=stable/grizzly
 
 function setup_localrc() {
-    LOCALRC_OLDNEW=$1;
-    LOCALRC_BRANCH=$2;
 
-    # Allow calling context to pre-populate the localrc file
-    # with additional values
-    if [ -z $KEEP_LOCALRC ] ; then
-        rm -f localrc
-    fi
+
+
 
     DEFAULT_ENABLED_SERVICES=g-api,g-reg,key,n-api,n-crt,n-obj,n-cpu,n-sch,horizon,mysql,rabbit,sysstat
     DEFAULT_ENABLED_SERVICES+=,s-proxy,s-account,s-container,s-object,cinder,c-api,c-vol,c-sch,n-cond
@@ -61,15 +57,20 @@ function setup_localrc() {
         if [ "$DEVSTACK_GATE_CELLS" -eq "1" ]; then
             MY_ENABLED_SERVICES=$MY_ENABLED_SERVICES,n-cell
         fi
-    elif [ "$LOCALRC_BRANCH" == "stable/havana" ]; then
+
+     elif [ "$LOCALRC_BRANCH" == "stable/havana" ]; then
         MY_ENABLED_SERVICES+=,c-bak
         # we don't want to enable services for grenade that don't have upgrade support
         # otherwise they can break grenade, especially when they are projects like
         # ceilometer which inject code in other projects
+
         if [ "$DEVSTACK_GATE_GRENADE" -ne "1" ]; then
             MY_ENABLED_SERVICES+=,heat,h-api,h-api-cfn,h-api-cw,h-eng
             MY_ENABLED_SERVICES+=,ceilometer-acompute,ceilometer-acentral,ceilometer-collector,ceilometer-api
         fi
+
+        
+        
         if [ "$DEVSTACK_GATE_NEUTRON" -eq "1" ]; then
             MY_ENABLED_SERVICES=$MY_ENABLED_SERVICES,quantum,q-svc,q-agt,q-dhcp,q-l3,q-meta,q-lbaas,q-vpn,q-fwaas,q-metering
             echo "Q_USE_DEBUG_COMMAND=True" >>localrc
@@ -80,6 +81,7 @@ function setup_localrc() {
         if [ "$DEVSTACK_GATE_CELLS" -eq "1" ]; then
             MY_ENABLED_SERVICES=$MY_ENABLED_SERVICES,n-cell
         fi
+ 
     else # master
         MY_ENABLED_SERVICES+=,c-bak
         # we don't want to enable services for grenade that don't have upgrade support
@@ -260,7 +262,7 @@ else
     sudo chown -R stack:stack $BASE
 
     echo "Running devstack"
-    sudo -H -u stack ./stack.sh
+#    sudo -H -u stack ./stack.sh
 
     # provide a check that the right db was running
     # the path are different for fedora and red hat.
