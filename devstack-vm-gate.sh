@@ -90,6 +90,20 @@ export TEMPEST_CONCURRENCY=${TEMPEST_CONCURRENCY:-2}
 export DEVSTACK_GATE_GRENADE=${DEVSTACK_GATE_GRENADE:-0}
 export DEVSTACK_GATE_GRENADE_FORWARD=${DEVSTACK_GATE_GRENADE_FORWARD:-0}
 
+
+function create_user()
+{
+sudo useradd -U -s /bin/bash -d /opt/stack -m stack
+TEMPFILE=`mktemp`
+echo "stack ALL=(root) NOPASSWD:ALL" >$TEMPFILE
+chmod 0440 $TEMPFILE
+sudo chown root:root $TEMPFILE
+sudo mv $TEMPFILE /etc/sudoers.d/50_stack_sh
+}
+
+
+
+
 function setup_localrc() {
 
 
@@ -357,6 +371,7 @@ else
 fi
 }
 
+create_user
 setup_localrc
 
 
