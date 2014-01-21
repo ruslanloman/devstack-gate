@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -xe
 
 # Script that is run on the devstack vm; configures and
 # invokes devstack.
@@ -19,10 +19,76 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #put to job export 
-#DEVSTACK_GATE_TEMPEST=1 //tempest
-#DEVSTACK_GATE_NEUTRON=1 // Neutron
-#DEVSTACK_GATE_GRENADE=0
-#LOCALRC_BRANCH=stable/grizzly
+DEVSTACK_GATE_TEMPEST=1 #//tempest
+DEVSTACK_GATE_NEUTRON=1 #// Neutron
+DEVSTACK_GATE_GRENADE=0
+LOCALRC_BRANCH="stable/havana"
+DEVSTACK_GATE_CELLS=0
+
+export DEVSTACK_GATE_TEMPEST=${DEVSTACK_GATE_TEMPEST:-0}
+
+# Set to 1 to run the devstack exercises
+export DEVSTACK_GATE_EXERCISES=${DEVSTACK_GATE_EXERCISES:-0}
+
+# Set to 1 to run postgresql instead of mysql
+export DEVSTACK_GATE_POSTGRES=${DEVSTACK_GATE_POSTGRES:-0}
+
+# Set to 1 to use zeromq instead of rabbitmq (or qpid)
+export DEVSTACK_GATE_ZEROMQ=${DEVSTACK_GATE_ZEROMQ:-0}
+
+# Set to qpid to use qpid, or zeromq to use zeromq.
+# Default set to rabbitmq
+export DEVSTACK_GATE_MQ_DRIVER=${DEVSTACK_GATE_MQ_DRIVER:-"rabbitmq"}
+
+# Set to 1 to run tempest stress tests
+export DEVSTACK_GATE_TEMPEST_STRESS=${DEVSTACK_GATE_TEMPEST_STRESS:-0}
+
+# Set to 1 to run tempest heat slow tests
+export DEVSTACK_GATE_TEMPEST_HEAT_SLOW=${DEVSTACK_GATE_TEMPEST_HEAT_SLOW:-0}
+
+# Set to 1 to run tempest large ops test
+export DEVSTACK_GATE_TEMPEST_LARGE_OPS=${DEVSTACK_GATE_TEMPEST_LARGE_OPS:-0}
+
+# Set to 1 to run tempest smoke tests serially
+export DEVSTACK_GATE_SMOKE_SERIAL=${DEVSTACK_GATE_SMOKE_SERIAL:-0}
+
+# Set to 1 to explicitly enable tempest tenant isolation. Otherwise tenant isolation setting
+# for tempest will be the one chosen by devstack.
+export DEVSTACK_GATE_TEMPEST_ALLOW_TENANT_ISOLATION=${DEVSTACK_GATE_TEMPEST_ALLOW_TENANT_ISOLATION:-0}
+
+# Set to 1 to enable Cinder secure delete.
+# False by default to avoid dd problems on Precise.
+# https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1023755
+export DEVSTACK_CINDER_SECURE_DELETE=${DEVSTACK_CINDER_SECURE_DELETE:-0}
+
+# Set to 1 to run neutron instead of nova network
+# Only applicable to master branch
+export DEVSTACK_GATE_NEUTRON=${DEVSTACK_GATE_NEUTRON:-0}
+
+# Set to 1 to run nova in cells mode instead of the default mode
+export DEVSTACK_GATE_CELLS=${DEVSTACK_GATE_CELLS:-0}
+
+# Set to 1 to run ironic baremetal provisioning service.
+export DEVSTACK_GATE_IRONIC=${DEVSTACK_GATE_IRONIC:-0}
+
+# Set to 1 to run savanna
+export DEVSTACK_GATE_SAVANNA=${DEVSTACK_GATE_SAVANNA:-0}
+
+# Set to 0 to disable config_drive and use the metadata server instead
+export DEVSTACK_GATE_CONFIGDRIVE=${DEVSTACK_GATE_CONFIGDRIVE:-1}
+
+# Set the number of threads to run tempest with
+export TEMPEST_CONCURRENCY=${TEMPEST_CONCURRENCY:-2}
+
+# The following variables are set for different directions of Grenade updating
+# for a stable branch we want to both try to upgrade forward n => n+1 as
+# well as upgrade from last n-1 => n.
+#
+# i.e. stable/havana:
+#   DGG=1 means stable/grizzly => stable/havana
+#   DGGF=1 means stable/havana => master (or stable/icehouse if that's out)
+export DEVSTACK_GATE_GRENADE=${DEVSTACK_GATE_GRENADE:-0}
+export DEVSTACK_GATE_GRENADE_FORWARD=${DEVSTACK_GATE_GRENADE_FORWARD:-0}
 
 function setup_localrc() {
 
@@ -228,6 +294,10 @@ EOF
     fi
 }
 
+
+function block()
+{
+
 if [ "$DEVSTACK_GATE_GRENADE" -eq "1" ]; then
     cd $BASE/old/devstack
     setup_localrc "old" "$GRENADE_OLD_BRANCH"
@@ -285,6 +355,14 @@ else
         fi
     fi
 fi
+}
+
+setup_localrc
+
+
+
+function tempest()
+{
 
 echo "Removing sudo privileges for devstack user"
 sudo rm /etc/sudoers.d/50_stack_sh
@@ -371,3 +449,6 @@ else
 <?xml version="1.0" encoding="UTF-8"?><testsuite name="nosetests" tests="0" errors="0" failures="0" skip="0"></testsuite>
 EOF
 fi
+
+
+}
